@@ -15,8 +15,10 @@ const BOT_INFO = {
   allows_users_to_create_topics: false, can_manage_bots: false, supports_join_request_queries: false,
 };
 
+const providerCalls: string[] = [];
 const fakeProvider = {
   async lookup(query: string): Promise<LookupResult | null> {
+    providerCalls.push(query);
     if (query.toLowerCase().startsWith("гречка")) {
       return { name: "Гречка варена", per100g: { kcal: 110, protein: 4.2, fat: 1.1, carbs: 21 }, portionG: 150, source: "claude", note: "" };
     }
@@ -68,6 +70,7 @@ describe("bot flows", () => {
   beforeEach(async () => {
     await new Database(env.DB).ensureSchema();
     await resetTables(env.DB);
+    providerCalls.length = 0;
   });
 
   it("full flow: goal, add via lookup, manual add, today, tap-to-log, undo, /eat", async () => {
@@ -145,6 +148,32 @@ describe("bot flows", () => {
     await click(`prod_del_yes:${p.id}`);
     expect(await db.listProducts(USER.id)).toEqual([]);
     expect(lastText()).toContain("порожній");
+  });
+
+  it("nutrition API is called once per query: cache and existing-product shortcut", async () => {
+    const { send, click, lastText } = setup();
+    await send("/add гречка");
+    expect(providerCalls).toEqual(["гречка"]);
+    await click("add:cancel");
+
+    // Той самий запит (інший регістр/пробіли) — з кешу, без виклику API.
+    await send("/add  Гречка ");
+    expect(lastText()).toContain("Гречка варена");
+    expect(providerCalls).toEqual(["гречка"]);
+    await click("add:save");
+    await click("portion:150");
+    expect(lastText()).toContain("Додано до списку");
+
+    // Продукт уже в списку — одразу картка, без пошуку.
+    await send("гречка варена");
+    expect(lastText()).toContain("уже є у вашому списку");
+    expect(providerCalls).toEqual(["гречка"]);
+
+    // Запис у щоденник і "Сьогодні" API не використовують.
+    await send("📅 Сьогодні");
+    await click("today:refresh");
+    await send("/eat гречка 100");
+    expect(providerCalls).toEqual(["гречка"]);
   });
 
   it("free text starts a lookup and messages use HTML parse mode", async () => {
