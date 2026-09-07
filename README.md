@@ -24,6 +24,11 @@
 
 Бот можна розгорнути прямо з GitHub через браузер, нічого не встановлюючи.
 
+**Cloudflare Workers (рекомендовано: безкоштовно, без сервера)**
+
+У теці [`worker/`](worker/) є окрема версія бота на TypeScript для Cloudflare Workers + D1.
+Покрокова інструкція для Dashboard — у [`worker/README.md`](worker/README.md).
+
 **Railway (рекомендовано: працює постійно, база зберігається)**
 
 1. [railway.com](https://railway.com) → New Project → Deploy from GitHub repo → оберіть `Food-tracker`.

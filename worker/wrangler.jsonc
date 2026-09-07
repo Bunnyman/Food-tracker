@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "food-tracker-bot",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // База D1 створюється автоматично при першому деплої (wrangler resource provisioning).
+  "d1_databases": [{ "binding": "DB", "database_name": "food-tracker-db" }],
+  "vars": {
+    "CLAUDE_MODEL": "claude-opus-5",
+    "TZ": "Europe/Kyiv"
+  }
+  // Секрети TELEGRAM_BOT_TOKEN та ANTHROPIC_API_KEY задаються в Cloudflare Dashboard
+  // (Settings → Variables and Secrets), не тут.
+}
