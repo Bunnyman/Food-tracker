@@ -20,7 +20,29 @@
 `/help`, `/cancel`. Будь-який довільний текст сприймається як назва продукту
 для додавання.
 
-## Запуск
+## Хостинг без локального запуску
+
+Бот можна розгорнути прямо з GitHub через браузер, нічого не встановлюючи.
+
+**Railway (рекомендовано: працює постійно, база зберігається)**
+
+1. [railway.com](https://railway.com) → New Project → Deploy from GitHub repo → оберіть `Food-tracker`.
+2. Variables → додайте `TELEGRAM_BOT_TOKEN` і `ANTHROPIC_API_KEY`.
+3. Service → Settings → Volumes → Add Volume з mount path `/app/data` (щоб база не зникала при перезапусках).
+4. Deploy. Конфігурація береться з `railway.json` і `Dockerfile`.
+
+**Render (безкоштовний тариф)**
+
+1. [render.com](https://render.com) → New → Blueprint → оберіть репозиторій; конфігурація береться з `render.yaml`.
+2. Введіть `TELEGRAM_BOT_TOKEN` і `ANTHROPIC_API_KEY`, коли Render їх запитає.
+3. Безкоштовний сервіс засинає без HTTP-трафіку: додайте моніторинг на
+   [UptimeRobot](https://uptimerobot.com), який відкриває `https://<ваш-сервіс>.onrender.com/health`
+   кожні 5 хвилин. Файлова система на free-тарифі не зберігається між деплоями, тому
+   список продуктів і щоденник можуть скинутися після нового деплою.
+
+Якщо хостинг вимагає відкритий порт, бот сам піднімає health-endpoint на `PORT`.
+
+## Запуск локально
 
 ```bash
 cp .env.example .env      # вписати TELEGRAM_BOT_TOKEN та ANTHROPIC_API_KEY
