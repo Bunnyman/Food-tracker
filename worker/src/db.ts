@@ -31,7 +31,16 @@ const SCHEMA = [
      user_id INTEGER PRIMARY KEY,
      state TEXT NOT NULL,
      updated_at TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS lookup_cache (
+     query TEXT PRIMARY KEY,
+     result TEXT NOT NULL,
+     created_at TEXT NOT NULL)`,
 ];
+
+/** Нормалізує запит для кешу: без регістру, зайвих пробілів і пунктуації по краях. */
+export function normalizeQuery(query: string): string {
+  return query.trim().toLowerCase().replace(/\s+/g, " ").replace(/^[\p{P}\s]+|[\p{P}\s]+$/gu, "");
+}
 
 interface ProductRow {
   id: number; user_id: number; name: string; kcal: number; protein: number; fat: number; carbs: number;
@@ -198,5 +207,22 @@ export class Database {
 
   async clearState(userId: number): Promise<void> {
     await this.d1.prepare("DELETE FROM states WHERE user_id=?").bind(userId).run();
+  }
+
+  // ---------- кеш пошуку БЖВ (спільний для всіх користувачів) ----------
+
+  async getCachedLookup<T>(query: string): Promise<T | null> {
+    const row = await this.d1
+      .prepare("SELECT result FROM lookup_cache WHERE query=?")
+      .bind(normalizeQuery(query))
+      .first<{ result: string }>();
+    return row ? (JSON.parse(row.result) as T) : null;
+  }
+
+  async setCachedLookup(query: string, result: unknown): Promise<void> {
+    await this.d1
+      .prepare("INSERT OR REPLACE INTO lookup_cache(query, result, created_at) VALUES (?, ?, ?)")
+      .bind(normalizeQuery(query), JSON.stringify(result), now())
+      .run();
   }
 }

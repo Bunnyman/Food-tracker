@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
-import { Database } from "../src/db";
+import { Database, normalizeQuery } from "../src/db";
 import { resetTables } from "./helpers";
 
 const M = (kcal: number, protein: number, fat: number, carbs: number) => ({ kcal, protein, fat, carbs });
@@ -57,6 +57,14 @@ describe("Database", () => {
     expect(await db.deleteProduct(1, p.id)).toBe(true);
     expect(await db.listProducts(1)).toEqual([]);
     expect((await db.listEntries(1, "2026-09-07"))[0].productName).toBe("Банан");
+  });
+
+  it("lookup cache is keyed by normalized query", async () => {
+    expect(normalizeQuery("  Гречка   Варена. ")).toBe("гречка варена");
+    expect(await db.getCachedLookup("гречка")).toBeNull();
+    await db.setCachedLookup("Гречка ", { name: "Гречка варена", kcal: 110 });
+    expect(await db.getCachedLookup("гречка")).toEqual({ name: "Гречка варена", kcal: 110 });
+    expect(await db.getCachedLookup("  ГРЕЧКА")).toEqual({ name: "Гречка варена", kcal: 110 });
   });
 
   it("dialog state roundtrip", async () => {

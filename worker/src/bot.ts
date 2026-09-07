@@ -1,7 +1,7 @@
 import { Bot, type Context, GrammyError, InlineKeyboard, type Transformer } from "grammy";
 import type { UserFromGetMe } from "grammy/types";
 import type { Database } from "./db";
-import type { NutritionService } from "./nutrition";
+import type { LookupResult, NutritionService } from "./nutrition";
 import type { DialogState, PendingProduct } from "./types";
 import {
   BTN_ADD, BTN_GOAL, BTN_HELP, BTN_PRODUCTS, BTN_TODAY, BTN_UNDO,
@@ -117,8 +117,22 @@ export function createBot(token: string, services: Services, options: BotOptions
       await ctx.reply("Назва має бути від 2 до 100 символів. Спробуйте ще раз.");
       return;
     }
+    // 1) Продукт з такою назвою вже є — API не потрібен.
+    const existing = await db.findProduct(uid(ctx), query);
+    if (existing && existing.name.toLowerCase() === query.toLowerCase()) {
+      await db.clearState(uid(ctx));
+      await ctx.reply("Цей продукт уже є у вашому списку:\n" + productCard(existing), {
+        reply_markup: productKeyboard(existing),
+      });
+      return;
+    }
     const waiting = await ctx.reply(`🔎 Шукаю «${escapeHtml(query)}»…`);
-    const result = await nutrition.lookup(query);
+    // 2) Кеш: однаковий запит (від будь-кого) не викликає API повторно.
+    let result = await db.getCachedLookup<LookupResult>(query);
+    if (!result) {
+      result = await nutrition.lookup(query);
+      if (result) await db.setCachedLookup(query, result);
+    }
     const edit = (text: string, reply_markup: InlineKeyboard) =>
       ctx.api.editMessageText(waiting.chat.id, waiting.message_id, text, { reply_markup });
     if (!result) {
