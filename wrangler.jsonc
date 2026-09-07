@@ -5,6 +5,8 @@
   "compatibility_date": "2026-08-22",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Не затирати змінні, додані в Dashboard, при деплої з GitHub.
+  "keep_vars": true,
   // База D1 створюється автоматично при першому деплої (wrangler resource provisioning).
   "d1_databases": [{ "binding": "DB", "database_name": "food-tracker-db" }],
   "vars": {
