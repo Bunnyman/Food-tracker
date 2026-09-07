@@ -8,9 +8,10 @@ Telegram надсилає оновлення через вебхук, дані �
 
 1. Зайдіть на [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create** →
    **Import a repository** → підключіть GitHub і оберіть `Food-tracker`.
-2. У налаштуваннях імпорту вкажіть **Root directory**: `worker`. Build command залиште порожнім,
-   deploy command — `npx wrangler deploy` (типово). Натисніть **Create and deploy**.
-   База D1 `food-tracker-db` створюється автоматично під час першого деплою.
+2. Налаштування імпорту залиште типовими (Root directory порожній, build command порожній,
+   deploy command `npx wrangler deploy`). Натисніть **Create and deploy**.
+   Конфігурація Worker лежить у `wrangler.jsonc` в корені репозиторію, а база D1
+   `food-tracker-db` створюється автоматично під час першого деплою.
 3. Відкрийте Worker → **Settings** → **Variables and Secrets** → додайте секрети
    `TELEGRAM_BOT_TOKEN` (від @BotFather) і `ANTHROPIC_API_KEY`
    (з [console.anthropic.com](https://console.anthropic.com)). Збережіть — Worker перезапуститься.
@@ -40,6 +41,8 @@ Telegram надсилає оновлення через вебхук, дані �
 - `src/texts.ts`, `src/keyboards.ts` — тексти українською та клавіатури.
 
 ## Локальна розробка (необов'язково)
+
+У корені репозиторію (npm workspace):
 
 ```bash
 npm install

@@ -1,0 +1,10 @@
+{
+  "name": "food-tracker",
+  "private": true,
+  "workspaces": ["worker"],
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "test": "npm --workspace worker test",
+    "typecheck": "npm --workspace worker run typecheck"
+  }
+}
